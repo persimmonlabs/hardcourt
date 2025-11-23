@@ -17,7 +17,7 @@ func NewTournamentHandler() *TournamentHandler {
 
 // GET /api/tournaments - List all tournaments
 func (h *TournamentHandler) ListTournaments(w http.ResponseWriter, r *http.Request) {
-	status := r.URL.Query().Get("status") // ongoing, completed, upcoming
+	// status := r.URL.Query().Get("status") // TODO: Use for filtering when database is connected
 
 	// TODO: Fetch from database
 	// For now, return mock data
@@ -65,7 +65,7 @@ func (h *TournamentHandler) GetTournament(w http.ResponseWriter, r *http.Request
 // GET /api/tournaments/{id}/matches - Get all matches in tournament
 func (h *TournamentHandler) GetTournamentMatches(w http.ResponseWriter, r *http.Request) {
 	tournamentID := chi.URLParam(r, "id")
-	round := r.URL.Query().Get("round") // R128, R64, R32, R16, QF, SF, F
+	_ = r.URL.Query().Get("round") // TODO: Use for filtering when database is connected
 
 	// TODO: Fetch from database filtered by tournament_id and optionally round
 	matches := []map[string]interface{}{} // Empty for now
@@ -73,7 +73,6 @@ func (h *TournamentHandler) GetTournamentMatches(w http.ResponseWriter, r *http.
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"tournament_id": tournamentID,
-		"round":         round,
 		"matches":       matches,
 	})
 }
@@ -103,18 +102,16 @@ func (h *TournamentHandler) GetTournamentDraw(w http.ResponseWriter, r *http.Req
 // GET /api/matches/past - Get historical matches
 func (h *TournamentHandler) GetPastMatches(w http.ResponseWriter, r *http.Request) {
 	// Query params: player, tournament, date_from, date_to, limit, offset
-	playerID := r.URL.Query().Get("player")
-	tournamentID := r.URL.Query().Get("tournament")
+	_ = r.URL.Query().Get("player")       // TODO: Use for filtering when database is connected
+	_ = r.URL.Query().Get("tournament")   // TODO: Use for filtering when database is connected
 
 	// TODO: Fetch from database with filters
 	matches := []map[string]interface{}{} // Empty for now
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"matches":     matches,
-		"total":       0,
-		"player_id":   playerID,
-		"tournament_id": tournamentID,
+		"matches": matches,
+		"total":   0,
 	})
 }
 

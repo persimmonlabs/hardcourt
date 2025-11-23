@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"hardcourt/backend/internal/domain"
-	"hardcourt/backend/internal/repository"
 )
 
 // DrawSeedData represents a tournament draw entry

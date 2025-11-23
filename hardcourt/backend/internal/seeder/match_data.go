@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"hardcourt/backend/internal/domain"
-	"hardcourt/backend/internal/repository"
 )
 
 // MatchSeedData represents a single match result

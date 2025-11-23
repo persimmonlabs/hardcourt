@@ -11,6 +11,10 @@ export type Tournament = {
     start_date?: string;
     end_date?: string;
     prize_money?: number;
+    year?: number;
+    winner_id?: string;
+    runner_up_id?: string;
+    logo_url?: string;
 };
 
 export const useTournaments = (status?: string) => {

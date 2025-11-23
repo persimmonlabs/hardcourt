@@ -14,6 +14,7 @@ import (
 	"hardcourt/backend/internal/domain"
 	"hardcourt/backend/internal/handlers"
 	"hardcourt/backend/internal/repository"
+	"hardcourt/backend/internal/scraper"
 	"hardcourt/backend/internal/scrapers"
 	"hardcourt/backend/internal/simulator"
 	"hardcourt/backend/internal/websocket"
@@ -76,6 +77,21 @@ func main() {
 
 	// Initialize scraper aggregator for real tennis data
 	aggregator := scrapers.NewAggregator(matchRepo, playerRepo, tournamentRepo)
+
+	// 6a. Start Live Web Scraping Scheduler (runs every minute)
+	scraperInterval := 1 * time.Minute
+	if intervalStr := os.Getenv("SCRAPER_INTERVAL"); intervalStr != "" {
+		if duration, err := time.ParseDuration(intervalStr); err == nil {
+			scraperInterval = duration
+		}
+	}
+
+	scraperScheduler := scraper.NewScheduler(tournamentRepo, playerRepo, matchRepo, scraperInterval)
+	if err := scraperScheduler.Start(); err != nil {
+		log.Printf("Warning: Failed to start scraper scheduler: %v", err)
+	} else {
+		log.Printf("✅ Scraper scheduler started (interval: %s)", scraperInterval)
+	}
 
 	// Check if simulator mode is enabled via environment variable
 	enableSimulator := os.Getenv("ENABLE_SIMULATOR")
@@ -187,6 +203,13 @@ func main() {
 		r.Get("/tournaments/{id}", tournamentHandler.GetTournament)
 		r.Get("/tournaments/{id}/matches", tournamentHandler.GetTournamentMatches)
 		r.Get("/tournaments/{id}/draw", tournamentHandler.GetTournamentDraw)
+
+		// Scraper monitoring endpoint
+		r.Get("/scraper/status", func(w http.ResponseWriter, r *http.Request) {
+			status := scraperScheduler.GetStatus()
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(status)
+		})
 	})
 
 	// WebSocket Route
@@ -215,6 +238,9 @@ func main() {
 
 	<-sigChan
 	log.Println("Shutting down gracefully...")
+
+	// Stop scraper scheduler
+	scraperScheduler.Stop()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()

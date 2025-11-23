@@ -44,6 +44,12 @@ func (s *Service) SeedMatches(ctx context.Context) error {
 	// Real ATP 2023 matches
 	allMatches = append(allMatches, GetRealATPMatches2023()...)
 
+	// ALL ROUNDS of 2024 Grand Slams (F, SF, QF, R16, R32)
+	allMatches = append(allMatches, GetAusOpen2024AllRounds()...)
+	allMatches = append(allMatches, GetRolandGarros2024AllRounds()...)
+	allMatches = append(allMatches, GetWimbledon2024AllRounds()...)
+	allMatches = append(allMatches, GetUSOpen2024AllRounds()...)
+
 	log.Printf("Total matches to seed: %d", len(allMatches))
 
 	successCount := 0

@@ -176,7 +176,7 @@ func (s *ATPTourScraper) ScrapeTournaments(ctx context.Context) error {
 		tourneyName := strings.TrimSpace(item.Find(".tourney-title, h3").Text())
 		location := strings.TrimSpace(item.Find(".tourney-location").Text())
 		surface := strings.TrimSpace(item.Find(".tourney-surface").Text())
-		dates := strings.TrimSpace(item.Find(".tourney-dates").Text())
+		_ = strings.TrimSpace(item.Find(".tourney-dates").Text()) // dates - for future use
 
 		if tourneyName == "" {
 			return
@@ -239,7 +239,7 @@ func (s *ATPTourScraper) ScrapeLiveScores(ctx context.Context) error {
 	doc.Find(".match-item, .day-table tbody tr").Each(func(i int, match *goquery.Selection) {
 		player1 := strings.TrimSpace(match.Find(".player-left, .player1").Text())
 		player2 := strings.TrimSpace(match.Find(".player-right, .player2").Text())
-		score := strings.TrimSpace(match.Find(".score").Text())
+		_ = strings.TrimSpace(match.Find(".score").Text()) // score - for future parsing
 		status := strings.TrimSpace(match.Find(".status").Text())
 
 		if player1 == "" || player2 == "" {

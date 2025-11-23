@@ -79,7 +79,7 @@ func (s *FlashScoreScraper) ScrapeLiveMatches(ctx context.Context) error {
 		score1 := strings.TrimSpace(match.Find(".event__score--home").Text())
 		score2 := strings.TrimSpace(match.Find(".event__score--away").Text())
 		status := strings.TrimSpace(match.Find(".event__stage").Text())
-		tournament := strings.TrimSpace(match.Find(".event__title").Text())
+		_ = strings.TrimSpace(match.Find(".event__title").Text()) // tournament - for future use
 
 		if player1 == "" || player2 == "" {
 			return

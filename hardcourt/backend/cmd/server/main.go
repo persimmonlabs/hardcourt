@@ -119,6 +119,7 @@ func main() {
 
 	// 8. Handlers
 	matchHandler := handlers.NewMatchHandler(matchRepo)
+	tournamentHandler := handlers.NewTournamentHandler()
 
 	// 9. Router
 	r := chi.NewRouter()
@@ -165,8 +166,17 @@ func main() {
 
 	// REST API Routes
 	r.Route("/api", func(r chi.Router) {
+		// Match routes
 		r.Get("/matches", matchHandler.GetAllMatches)
 		r.Get("/matches/{id}", matchHandler.GetMatchByID)
+		r.Get("/matches/{id}/highlights", tournamentHandler.GetMatchHighlights)
+		r.Get("/matches/past", tournamentHandler.GetPastMatches)
+
+		// Tournament routes
+		r.Get("/tournaments", tournamentHandler.ListTournaments)
+		r.Get("/tournaments/{id}", tournamentHandler.GetTournament)
+		r.Get("/tournaments/{id}/matches", tournamentHandler.GetTournamentMatches)
+		r.Get("/tournaments/{id}/draw", tournamentHandler.GetTournamentDraw)
 	})
 
 	// WebSocket Route

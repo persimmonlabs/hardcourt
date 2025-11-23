@@ -22,16 +22,16 @@ func NewMatchRepository(db *database.DB) *MatchRepository {
 func (r *MatchRepository) Create(ctx context.Context, match *domain.Match) error {
 	query := `
 		INSERT INTO matches (
-			id, tournament_id, player1_id, player2_id, status, start_time,
+			id, tournament_id, player1_id, player2_id, status, start_time, is_simulated,
 			sets_p1, sets_p2, games_p1, games_p2, points_p1, points_p2, serving,
 			win_prob_p1, leverage_index, fatigue_p1, fatigue_p2
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		ON CONFLICT (id) DO NOTHING
 	`
 
 	_, err := r.db.Pool.Exec(ctx, query,
 		match.ID, match.TournamentID, match.Player1ID, match.Player2ID,
-		match.Status, match.StartTime,
+		match.Status, match.StartTime, match.IsSimulated,
 		match.Score.SetsP1, match.Score.SetsP2,
 		match.Score.GamesP1, match.Score.GamesP2,
 		match.Score.PointsP1, match.Score.PointsP2,
@@ -112,7 +112,7 @@ func (r *MatchRepository) Update(ctx context.Context, match *domain.Match) error
 func (r *MatchRepository) GetByID(ctx context.Context, id string) (*domain.Match, error) {
 	query := `
 		SELECT
-			m.id, m.tournament_id, m.player1_id, m.player2_id, m.status, m.start_time, m.winner_id,
+			m.id, m.tournament_id, m.player1_id, m.player2_id, m.status, m.start_time, m.winner_id, m.is_simulated,
 			m.sets_p1, m.sets_p2, m.games_p1, m.games_p2, m.points_p1, m.points_p2, m.serving,
 			m.win_prob_p1, m.leverage_index, m.fatigue_p1, m.fatigue_p2,
 			p1.id, p1.name, p1.country_code, p1.rank,
@@ -125,7 +125,7 @@ func (r *MatchRepository) GetByID(ctx context.Context, id string) (*domain.Match
 		JOIN players p1 ON m.player1_id = p1.id
 		JOIN players p2 ON m.player2_id = p2.id
 		LEFT JOIN match_stats s ON m.id = s.match_id
-		WHERE m.id = $1
+		WHERE m.id = $1 AND m.is_simulated = FALSE
 	`
 
 	match := &domain.Match{
@@ -135,7 +135,7 @@ func (r *MatchRepository) GetByID(ctx context.Context, id string) (*domain.Match
 
 	err := r.db.Pool.QueryRow(ctx, query, id).Scan(
 		&match.ID, &match.TournamentID, &match.Player1ID, &match.Player2ID,
-		&match.Status, &match.StartTime, &match.WinnerID,
+		&match.Status, &match.StartTime, &match.WinnerID, &match.IsSimulated,
 		&match.Score.SetsP1, &match.Score.SetsP2,
 		&match.Score.GamesP1, &match.Score.GamesP2,
 		&match.Score.PointsP1, &match.Score.PointsP2,
@@ -160,11 +160,11 @@ func (r *MatchRepository) GetByID(ctx context.Context, id string) (*domain.Match
 	return match, nil
 }
 
-// GetAll retrieves all matches with optional status filter
+// GetAll retrieves all matches with optional status filter (excludes simulated matches)
 func (r *MatchRepository) GetAll(ctx context.Context, status string) ([]*domain.Match, error) {
 	query := `
 		SELECT
-			m.id, m.tournament_id, m.player1_id, m.player2_id, m.status, m.start_time, m.winner_id,
+			m.id, m.tournament_id, m.player1_id, m.player2_id, m.status, m.start_time, m.winner_id, m.is_simulated,
 			m.sets_p1, m.sets_p2, m.games_p1, m.games_p2, m.points_p1, m.points_p2, m.serving,
 			m.win_prob_p1, m.leverage_index, m.fatigue_p1, m.fatigue_p2,
 			p1.id, p1.name, p1.country_code, p1.rank,
@@ -177,13 +177,14 @@ func (r *MatchRepository) GetAll(ctx context.Context, status string) ([]*domain.
 		JOIN players p1 ON m.player1_id = p1.id
 		JOIN players p2 ON m.player2_id = p2.id
 		LEFT JOIN match_stats s ON m.id = s.match_id
+		WHERE m.is_simulated = FALSE
 	`
 
 	var rows pgx.Rows
 	var err error
 
 	if status != "" {
-		query += " WHERE m.status = $1 ORDER BY m.start_time DESC"
+		query += " AND m.status = $1 ORDER BY m.start_time DESC"
 		rows, err = r.db.Pool.Query(ctx, query, status)
 	} else {
 		query += " ORDER BY m.start_time DESC"
@@ -204,7 +205,7 @@ func (r *MatchRepository) GetAll(ctx context.Context, status string) ([]*domain.
 
 		err := rows.Scan(
 			&match.ID, &match.TournamentID, &match.Player1ID, &match.Player2ID,
-			&match.Status, &match.StartTime, &match.WinnerID,
+			&match.Status, &match.StartTime, &match.WinnerID, &match.IsSimulated,
 			&match.Score.SetsP1, &match.Score.SetsP2,
 			&match.Score.GamesP1, &match.Score.GamesP2,
 			&match.Score.PointsP1, &match.Score.PointsP2,
@@ -226,4 +227,21 @@ func (r *MatchRepository) GetAll(ctx context.Context, status string) ([]*domain.
 	}
 
 	return matches, rows.Err()
+}
+
+// DeleteSimulated deletes all simulated matches from the database
+func (r *MatchRepository) DeleteSimulated(ctx context.Context) error {
+	query := `DELETE FROM matches WHERE is_simulated = TRUE`
+
+	result, err := r.db.Pool.Exec(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to delete simulated matches: %w", err)
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected > 0 {
+		fmt.Printf("Deleted %d simulated matches\n", rowsAffected)
+	}
+
+	return nil
 }

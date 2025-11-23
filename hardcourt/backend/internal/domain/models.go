@@ -22,9 +22,13 @@ type Tournament struct {
 	Country    string     `json:"country"`
 	StartDate  *time.Time `json:"start_date,omitempty"`
 	EndDate    *time.Time `json:"end_date,omitempty"`
-	Category   string     `json:"category"`   // ATP/WTA, Grand Slam, Masters 1000
+	Year       int        `json:"year,omitempty"` // Year of tournament for filtering
+	Category   string     `json:"category"`       // ATP/WTA, Grand Slam, Masters 1000
 	PrizeMoney int64      `json:"prize_money"`
-	Status     string     `json:"status"` // upcoming, ongoing, completed
+	Status     string     `json:"status"`          // upcoming, ongoing, completed
+	WinnerID   *string    `json:"winner_id,omitempty"`    // Tournament champion
+	RunnerUpID *string    `json:"runner_up_id,omitempty"` // Tournament finalist
+	LogoURL    string     `json:"logo_url,omitempty"`     // Tournament logo
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 }
@@ -61,6 +65,7 @@ type Match struct {
 	WinnerID        *string     `json:"winner_id,omitempty"`
 	DurationMinutes int         `json:"duration_minutes,omitempty"`
 	Court           string      `json:"court,omitempty"`
+	IsSimulated     bool        `json:"is_simulated"` // TRUE for simulator matches, FALSE for real
 	CreatedAt       time.Time   `json:"created_at"`
 	UpdatedAt       time.Time   `json:"updated_at"`
 

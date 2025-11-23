@@ -80,6 +80,16 @@ func main() {
 	// Check if simulator mode is enabled via environment variable
 	enableSimulator := os.Getenv("ENABLE_SIMULATOR")
 
+	// Cleanup: Delete simulated matches if simulator is disabled
+	if enableSimulator != "true" {
+		log.Println("ENABLE_SIMULATOR=false, cleaning up simulated matches from database")
+		if err := matchRepo.DeleteSimulated(ctx); err != nil {
+			log.Printf("Warning: Failed to delete simulated matches: %v", err)
+		} else {
+			log.Println("Successfully deleted all simulated matches")
+		}
+	}
+
 	// Try to fetch real live matches first
 	liveMatches, err := aggregator.FetchLiveMatches(ctx)
 	if err != nil || len(liveMatches) == 0 {

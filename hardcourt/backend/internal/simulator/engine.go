@@ -84,6 +84,7 @@ func (e *Engine) InitializeMatches() {
 			Player2:      &players[i*2+1],
 			Status:       domain.StatusLive,
 			StartTime:    time.Now(),
+			IsSimulated:  true, // Mark as simulated match
 			Score: domain.ScoreState{
 				PointsP1: "0",
 				PointsP2: "0",

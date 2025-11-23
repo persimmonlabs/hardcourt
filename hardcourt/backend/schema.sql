@@ -6,12 +6,21 @@ CREATE TABLE IF NOT EXISTS tournaments (
     country VARCHAR(100),
     start_date DATE,
     end_date DATE,
+    year INT, -- Year of tournament for easy filtering
     category VARCHAR(50), -- ATP/WTA, Grand Slam, Masters 1000, etc.
     prize_money BIGINT,
     status VARCHAR(50) DEFAULT 'upcoming', -- upcoming, ongoing, completed
+    winner_id VARCHAR(255), -- References players(id) - champion
+    runner_up_id VARCHAR(255), -- References players(id) - finalist
+    logo_url VARCHAR(500), -- Tournament logo/branding
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Indexes for tournaments
+CREATE INDEX IF NOT EXISTS idx_tournaments_year ON tournaments(year DESC);
+CREATE INDEX IF NOT EXISTS idx_tournaments_status_year ON tournaments(status, year DESC);
+CREATE INDEX IF NOT EXISTS idx_tournaments_category ON tournaments(category);
 
 CREATE TABLE IF NOT EXISTS players (
     id VARCHAR(255) PRIMARY KEY,
@@ -40,13 +49,16 @@ CREATE TABLE IF NOT EXISTS matches (
     winner_id VARCHAR(255) REFERENCES players(id),
     duration_minutes INT,
     court VARCHAR(100),
+    is_simulated BOOLEAN DEFAULT FALSE, -- TRUE for simulator matches, FALSE for real matches
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_matches_status ON matches(status);
-CREATE INDEX idx_matches_tournament ON matches(tournament_id);
-CREATE INDEX idx_matches_start_time ON matches(start_time DESC);
+-- Indexes for matches
+CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
+CREATE INDEX IF NOT EXISTS idx_matches_tournament ON matches(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_matches_start_time ON matches(start_time DESC);
+CREATE INDEX IF NOT EXISTS idx_matches_simulated ON matches(is_simulated) WHERE is_simulated = TRUE;
 
 CREATE TABLE IF NOT EXISTS match_stats (
     match_id VARCHAR(255) PRIMARY KEY REFERENCES matches(id),

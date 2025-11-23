@@ -135,11 +135,16 @@ func (db *DB) RunMigrations(ctx context.Context) error {
 		)`,
 
 		// Add missing columns to existing tables (safe with IF NOT EXISTS)
+		// Tournaments - add all potentially missing columns
 		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS year INT`,
+		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS category VARCHAR(50)`,
+		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS prize_money BIGINT`,
+		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'upcoming'`,
 		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS winner_id VARCHAR(255)`,
 		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS runner_up_id VARCHAR(255)`,
 		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500)`,
 
+		// Players - add all potentially missing columns
 		`ALTER TABLE players ADD COLUMN IF NOT EXISTS points INT DEFAULT 0`,
 		`ALTER TABLE players ADD COLUMN IF NOT EXISTS age INT`,
 		`ALTER TABLE players ADD COLUMN IF NOT EXISTS height_cm INT`,
@@ -147,8 +152,10 @@ func (db *DB) RunMigrations(ctx context.Context) error {
 		`ALTER TABLE players ADD COLUMN IF NOT EXISTS plays VARCHAR(20)`,
 		`ALTER TABLE players ADD COLUMN IF NOT EXISTS backhand VARCHAR(20)`,
 
+		// Matches - add all potentially missing columns
 		`ALTER TABLE matches ADD COLUMN IF NOT EXISTS round VARCHAR(50)`,
 		`ALTER TABLE matches ADD COLUMN IF NOT EXISTS duration_minutes INT`,
+		`ALTER TABLE matches ADD COLUMN IF NOT EXISTS court VARCHAR(100)`,
 		`ALTER TABLE matches ADD COLUMN IF NOT EXISTS is_simulated BOOLEAN DEFAULT FALSE`,
 
 		// Indexes for performance

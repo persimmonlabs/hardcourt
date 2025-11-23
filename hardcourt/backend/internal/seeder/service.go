@@ -14,23 +14,40 @@ import (
 type Service struct {
 	tournamentRepo *repository.TournamentRepository
 	playerRepo     *repository.PlayerRepository
+	matchRepo      *repository.MatchRepository
+	drawRepo       *repository.TournamentDrawRepository
 	playerCache    map[string]string // name -> player ID mapping
 }
 
 // NewService creates a new seeder service
-func NewService(tournamentRepo *repository.TournamentRepository, playerRepo *repository.PlayerRepository) *Service {
+func NewService(
+	tournamentRepo *repository.TournamentRepository,
+	playerRepo *repository.PlayerRepository,
+	matchRepo *repository.MatchRepository,
+	drawRepo *repository.TournamentDrawRepository,
+) *Service {
 	return &Service{
 		tournamentRepo: tournamentRepo,
 		playerRepo:     playerRepo,
+		matchRepo:      matchRepo,
+		drawRepo:       drawRepo,
 		playerCache:    make(map[string]string),
 	}
 }
 
 // SeedTournaments populates the database with historical tournament data
-func (s *Service) SeedTournaments(ctx context.Context) error {
+func (s *Service) SeedTournaments(ctx context.Context, comprehensive bool) error {
 	log.Println("Starting tournament seeding...")
 
-	data := GetTournamentSeedData()
+	var data TournamentSeedData
+	if comprehensive {
+		log.Println("Using comprehensive dataset (Grand Slams, Masters 1000, ATP 500, ATP 250)")
+		data = GetComprehensiveTournamentData()
+	} else {
+		log.Println("Using standard dataset (Grand Slams, Masters 1000)")
+		data = GetTournamentSeedData()
+	}
+
 	successCount := 0
 	errorCount := 0
 
@@ -184,36 +201,56 @@ func (s *Service) extractCountryCode(name string) string {
 	return "XX" // Unknown country
 }
 
-// SeedPlayers creates core ATP players with accurate data
-func (s *Service) SeedPlayers(ctx context.Context) error {
-	log.Println("Seeding core ATP players...")
+// SeedPlayers creates ATP players with accurate data
+func (s *Service) SeedPlayers(ctx context.Context, comprehensive bool) error {
+	log.Println("Seeding ATP players...")
 
-	players := []domain.Player{
-		{ID: "j-sinner", Name: "J. Sinner", CountryCode: "IT", Rank: 1, Points: 11180},
-		{ID: "c-alcaraz", Name: "C. Alcaraz", CountryCode: "ES", Rank: 2, Points: 8500},
-		{ID: "n-djokovic", Name: "N. Djokovic", CountryCode: "RS", Rank: 3, Points: 7900},
-		{ID: "d-medvedev", Name: "D. Medvedev", CountryCode: "RU", Rank: 4, Points: 5000},
-		{ID: "a-zverev", Name: "A. Zverev", CountryCode: "DE", Rank: 5, Points: 4800},
-		{ID: "a-rublev", Name: "A. Rublev", CountryCode: "RU", Rank: 6, Points: 4100},
-		{ID: "h-rune", Name: "H. Rune", CountryCode: "DK", Rank: 7, Points: 3800},
-		{ID: "h-hurkacz", Name: "H. Hurkacz", CountryCode: "PL", Rank: 8, Points: 3500},
-		{ID: "t-fritz", Name: "T. Fritz", CountryCode: "US", Rank: 9, Points: 3200},
-		{ID: "s-tsitsipas", Name: "S. Tsitsipas", CountryCode: "GR", Rank: 10, Points: 3100},
-		{ID: "c-ruud", Name: "C. Ruud", CountryCode: "NO", Rank: 11, Points: 3000},
-		{ID: "g-dimitrov", Name: "G. Dimitrov", CountryCode: "BG", Rank: 12, Points: 2900},
-		{ID: "r-nadal", Name: "R. Nadal", CountryCode: "ES", Rank: 150, Points: 500}, // Legend (injured/retired)
-		{ID: "d-thiem", Name: "D. Thiem", CountryCode: "AT", Rank: 98, Points: 800},  // Former champion
+	var playerData []PlayerSeedData
+	if comprehensive {
+		log.Println("Using comprehensive player dataset (Top 50 + legends)")
+		playerData = GetTopATPPlayers()
+	} else {
+		// Basic dataset - top 12 + legends
+		playerData = []PlayerSeedData{
+			{ID: "j-sinner", Name: "J. Sinner", CountryCode: "IT", Rank: 1, Points: 11180, Age: 23, HeightCm: 193, Plays: "Right"},
+			{ID: "c-alcaraz", Name: "C. Alcaraz", CountryCode: "ES", Rank: 2, Points: 8500, Age: 21, HeightCm: 183, Plays: "Right"},
+			{ID: "n-djokovic", Name: "N. Djokovic", CountryCode: "RS", Rank: 3, Points: 7900, Age: 37, HeightCm: 188, Plays: "Right"},
+			{ID: "d-medvedev", Name: "D. Medvedev", CountryCode: "RU", Rank: 4, Points: 5000, Age: 28, HeightCm: 198, Plays: "Right"},
+			{ID: "a-zverev", Name: "A. Zverev", CountryCode: "DE", Rank: 5, Points: 4800, Age: 27, HeightCm: 198, Plays: "Right"},
+			{ID: "a-rublev", Name: "A. Rublev", CountryCode: "RU", Rank: 6, Points: 4100, Age: 27, HeightCm: 188, Plays: "Right"},
+			{ID: "h-rune", Name: "H. Rune", CountryCode: "DK", Rank: 7, Points: 3800, Age: 21, HeightCm: 193, Plays: "Right"},
+			{ID: "h-hurkacz", Name: "H. Hurkacz", CountryCode: "PL", Rank: 8, Points: 3500, Age: 27, HeightCm: 196, Plays: "Right"},
+			{ID: "t-fritz", Name: "T. Fritz", CountryCode: "US", Rank: 9, Points: 3200, Age: 27, HeightCm: 196, Plays: "Right"},
+			{ID: "s-tsitsipas", Name: "S. Tsitsipas", CountryCode: "GR", Rank: 10, Points: 3100, Age: 26, HeightCm: 193, Plays: "Right"},
+			{ID: "c-ruud", Name: "C. Ruud", CountryCode: "NO", Rank: 11, Points: 3000, Age: 26, HeightCm: 183, Plays: "Right"},
+			{ID: "g-dimitrov", Name: "G. Dimitrov", CountryCode: "BG", Rank: 12, Points: 2900, Age: 33, HeightCm: 191, Plays: "Right"},
+			{ID: "r-nadal", Name: "R. Nadal", CountryCode: "ES", Rank: 150, Points: 500, Age: 38, HeightCm: 185, Plays: "Left"},
+			{ID: "d-thiem", Name: "D. Thiem", CountryCode: "AT", Rank: 98, Points: 800, Age: 31, HeightCm: 185, Plays: "Right"},
+		}
 	}
 
 	successCount := 0
-	for _, player := range players {
-		if err := s.playerRepo.Create(ctx, &player); err != nil {
-			log.Printf("Warning: Failed to seed player %s: %v", player.Name, err)
+	for _, pd := range playerData {
+		player := &domain.Player{
+			ID:          pd.ID,
+			Name:        pd.Name,
+			CountryCode: pd.CountryCode,
+			Rank:        pd.Rank,
+			Points:      pd.Points,
+			Age:         pd.Age,
+			HeightCm:    pd.HeightCm,
+			Plays:       pd.Plays,
+		}
+
+		if err := s.playerRepo.Create(ctx, player); err != nil {
+			if !strings.Contains(err.Error(), "duplicate") && !strings.Contains(err.Error(), "conflict") {
+				log.Printf("Warning: Failed to seed player %s: %v", pd.Name, err)
+			}
 		} else {
 			successCount++
 		}
 	}
 
-	log.Printf("Player seeding complete: %d/%d successful", successCount, len(players))
+	log.Printf("Player seeding complete: %d/%d successful", successCount, len(playerData))
 	return nil
 }

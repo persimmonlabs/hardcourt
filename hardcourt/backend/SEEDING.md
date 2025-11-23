@@ -1,14 +1,16 @@
-# Comprehensive Tournament Data Seeding
+# MASSIVE Real ATP Tournament Data Seeding
 
-This system populates the database with **70+ tournaments**, **50+ players**, **20+ Grand Slam finals**, and **tournament draws** from 2020-2024.
+This system populates the database with **REAL ATP DATA** from Jeff Sackmann's tennis_atp repository: **80+ tournaments**, **100 players**, **50+ match results**, and **tournament draws** from 2020-2024.
 
 ## 📊 Data Overview
 
-### Comprehensive Mode (Default)
-- **70+ Tournaments**: Grand Slams, Masters 1000, ATP 500, ATP 250 (2020-2024)
-- **50+ Players**: Top 50 ATP rankings + tennis legends with full profiles
-- **20+ Match Results**: Complete Grand Slam finals with scores (2020-2024)
+### Comprehensive Mode (Default) - REAL ATP DATA
+- **80+ Tournaments**: Grand Slams, Masters 1000, ATP 500, ATP 250 (2020-2024) + Real ATP events
+- **100 Players**: Top 100 ATP rankings with real points, rankings, and profiles
+- **50+ Match Results**: Grand Slam finals + Real ATP match results (Brisbane, Adelaide, Rotterdam, Doha, etc.)
 - **Tournament Draws**: Bracket seeding with player positions
+
+**Data Source**: [Jeff Sackmann's tennis_atp repository](https://github.com/JeffSackmann/tennis_atp) - Comprehensive ATP match data in CSV format
 
 ### Standard Mode
 - **38 Tournaments**: Grand Slams and Masters 1000 only

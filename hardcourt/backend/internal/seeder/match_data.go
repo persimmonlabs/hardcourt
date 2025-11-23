@@ -30,15 +30,26 @@ type ScoreData struct {
 
 // SeedMatches populates matches for tournaments
 func (s *Service) SeedMatches(ctx context.Context) error {
-	log.Println("Starting match seeding...")
+	log.Println("Starting MASSIVE match seeding...")
 
-	// Example: Seed finals for each tournament
-	matchData := s.generateTournamentMatches()
+	// Combine all match data sources
+	var allMatches []MatchSeedData
+
+	// Historical Grand Slam finals
+	allMatches = append(allMatches, s.generateTournamentMatches()...)
+
+	// Real ATP 2024 matches
+	allMatches = append(allMatches, GetRealATPMatches2024()...)
+
+	// Real ATP 2023 matches
+	allMatches = append(allMatches, GetRealATPMatches2023()...)
+
+	log.Printf("Total matches to seed: %d", len(allMatches))
 
 	successCount := 0
 	errorCount := 0
 
-	for _, match := range matchData {
+	for _, match := range allMatches {
 		if err := s.seedSingleMatch(ctx, match); err != nil {
 			log.Printf("Warning: Failed to seed match: %v", err)
 			errorCount++

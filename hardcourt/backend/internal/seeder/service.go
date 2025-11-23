@@ -39,19 +39,28 @@ func NewService(
 func (s *Service) SeedTournaments(ctx context.Context, comprehensive bool) error {
 	log.Println("Starting tournament seeding...")
 
-	var data TournamentSeedData
+	var tournaments []TournamentInfo
 	if comprehensive {
-		log.Println("Using comprehensive dataset (Grand Slams, Masters 1000, ATP 500, ATP 250)")
-		data = GetComprehensiveTournamentData()
+		log.Println("Using MASSIVE dataset (Grand Slams, Masters 1000, ATP 500, ATP 250 + Real ATP Data)")
+		data := GetComprehensiveTournamentData()
+		tournaments = data.Tournaments
+
+		// Add real ATP tournaments from 2024
+		tournaments = append(tournaments, GetAdditionalTournaments2024()...)
+		// Add real ATP tournaments from 2023
+		tournaments = append(tournaments, GetAdditionalTournaments2023()...)
+
+		log.Printf("Total tournaments to seed: %d", len(tournaments))
 	} else {
 		log.Println("Using standard dataset (Grand Slams, Masters 1000)")
-		data = GetTournamentSeedData()
+		data := GetTournamentSeedData()
+		tournaments = data.Tournaments
 	}
 
 	successCount := 0
 	errorCount := 0
 
-	for _, tournamentInfo := range data.Tournaments {
+	for _, tournamentInfo := range tournaments {
 		if err := s.seedSingleTournament(ctx, tournamentInfo); err != nil {
 			log.Printf("Warning: Failed to seed tournament %s (%s): %v",
 				tournamentInfo.Name, tournamentInfo.Year, err)
@@ -207,8 +216,8 @@ func (s *Service) SeedPlayers(ctx context.Context, comprehensive bool) error {
 
 	var playerData []PlayerSeedData
 	if comprehensive {
-		log.Println("Using comprehensive player dataset (Top 50 + legends)")
-		playerData = GetTopATPPlayers()
+		log.Println("Using MASSIVE player dataset (Top 100 ATP rankings)")
+		playerData = GetMassiveATPPlayers()
 	} else {
 		// Basic dataset - top 12 + legends
 		playerData = []PlayerSeedData{

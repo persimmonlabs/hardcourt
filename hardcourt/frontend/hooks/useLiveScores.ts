@@ -6,6 +6,7 @@ export type Match = {
     player1: { name: string; country_code: string; rank: number };
     player2: { name: string; country_code: string; rank: number };
     status: string;
+    start_time?: string;
     score: {
         sets_p1: number;
         sets_p2: number;

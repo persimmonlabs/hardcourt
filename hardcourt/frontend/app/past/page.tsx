@@ -39,11 +39,13 @@ export default function PastMatchesPage() {
 
     // Group by date
     const groupedByDate = filteredMatches.reduce((acc, match) => {
-        const date = new Date(match.start_time).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        });
+        const date = match.start_time
+            ? new Date(match.start_time).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+              })
+            : "Recent";
         if (!acc[date]) acc[date] = [];
         acc[date].push(match);
         return acc;

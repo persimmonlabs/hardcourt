@@ -134,6 +134,23 @@ func (db *DB) RunMigrations(ctx context.Context) error {
 			leverage_index FLOAT
 		)`,
 
+		// Add missing columns to existing tables (safe with IF NOT EXISTS)
+		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS year INT`,
+		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS winner_id VARCHAR(255)`,
+		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS runner_up_id VARCHAR(255)`,
+		`ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500)`,
+
+		`ALTER TABLE players ADD COLUMN IF NOT EXISTS points INT DEFAULT 0`,
+		`ALTER TABLE players ADD COLUMN IF NOT EXISTS age INT`,
+		`ALTER TABLE players ADD COLUMN IF NOT EXISTS height_cm INT`,
+		`ALTER TABLE players ADD COLUMN IF NOT EXISTS weight_kg INT`,
+		`ALTER TABLE players ADD COLUMN IF NOT EXISTS plays VARCHAR(20)`,
+		`ALTER TABLE players ADD COLUMN IF NOT EXISTS backhand VARCHAR(20)`,
+
+		`ALTER TABLE matches ADD COLUMN IF NOT EXISTS round VARCHAR(50)`,
+		`ALTER TABLE matches ADD COLUMN IF NOT EXISTS duration_minutes INT`,
+		`ALTER TABLE matches ADD COLUMN IF NOT EXISTS is_simulated BOOLEAN DEFAULT FALSE`,
+
 		// Indexes for performance
 		`CREATE INDEX IF NOT EXISTS idx_tournaments_year ON tournaments(year DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_tournaments_status_year ON tournaments(status, year DESC)`,

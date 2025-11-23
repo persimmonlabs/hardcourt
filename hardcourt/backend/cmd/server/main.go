@@ -155,7 +155,11 @@ func main() {
 
 	// CORS Configuration for Railway deployment
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"}, // In production, replace with your Railway frontend URL
+		AllowedOrigins: []string{
+			"*", // Allow all origins for development
+			"https://hardcourt-production.up.railway.app",
+			"https://accomplished-hope-production.up.railway.app",
+		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-ID"},
 		ExposedHeaders:   []string{"Link"},
